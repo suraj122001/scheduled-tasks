@@ -1,5 +1,5 @@
 import os
-from dotenv import load_dotenv, dotenv_values, find_dotenv
+# from dotenv import load_dotenv, dotenv_values, find_dotenv
 import requests
 from twilio.rest import Client
 from twilio.http.http_client import TwilioHttpClient
@@ -7,14 +7,14 @@ from twilio.http.http_client import TwilioHttpClient
 
 
 
-envpath=find_dotenv()
-load_dotenv(envpath)
+# envpath=find_dotenv()
+# load_dotenv(envpath)
 
-os.getenv("APIKEY")
-os.getenv("account_sid")
-os.getenv("auth_token")
-os.getenv("MOBNUM")
-os.getenv("VRNUM")
+APIKEY=os.environ.get("APIKEY")
+account_sid=os.enciron.get("account_sid")
+auth_token=os.environ.get("auth_token")
+MOBNUM=os.environ.get("MOBNUM")
+VRNUM=os.environ.get("VRNUM")
 
 MY_LAT = 18.757420
 MY_LONG = 73.413727
@@ -23,7 +23,7 @@ MY_LONG = 73.413727
 parameters = {
     "lat":MY_LAT,
     "lon":MY_LONG,
-    "appid":os.environ["API_KEY"],
+    "appid":API_KEY,
     "cnt":4
 }
 
@@ -41,20 +41,20 @@ for hour_data in data["list"]:
 if will_rain :
     proxy_client = TwilioHttpClient()
     proxy_client.session.proxies = {'https': os.environ['https_proxy']}
-    client = Client(os.getenv("account_sid"), os.environ["auth_token"],http_client=proxy_client)
+    client = Client(account_sid, auth_token,http_client=proxy_client)
     message = client.messages.create(
         body="bring your umbrella  ☂️",
-        from_=os.getenv("VRNUM"),
-        to=os.getenv("MOBNUM"))
+        from_=VRNUM,
+        to=MOBNUM)
     print(message.status)
 
 else:
     proxy_client = TwilioHttpClient()
     proxy_client.session.proxies = {'https': os.environ['https_proxy']}
-    client = Client(os.getenv("account_sid"), os.environ["auth_token"],http_client=proxy_client)
+    client = Client(account_sid,auth_token,http_client=proxy_client)
     message = client.messages.create(
         body="DONT bring your umbrella  ☂️",
-        from_=os.getenv("VRNUM"),
-        to=os.getenv("MOBNUM"))
+        from_=VRNUM,
+        to=MOBNUM)
     print(message.status)
 
