@@ -1,38 +1,60 @@
-# To run and test the code you need to update 4 places:
-# 1. Change MY_EMAIL/MY_PASSWORD to your own details.
-# 2. Go to your email provider and make it allow less secure apps.
-# 3. Update the SMTP ADDRESS to match your email provider.
-# 4. Update birthdays.csv to contain today's month and day.
-# See the solution video in the 100 Days of Python Course for explainations.
-
-
-from datetime import datetime
-import pandas
-import random
-import smtplib
 import os
+from dotenv import load_dotenv, dotenv_values, find_dotenv
+import requests
+from twilio.rest import Client
+from twilio.http.http_client import TwilioHttpClient
 
-# import os and use it to get the Github repository secrets
-MY_EMAIL = os.environ.get("MY_EMAIL")
-MY_PASSWORD = os.environ.get("MY_PASSWORD")
 
-today = datetime.now()
-today_tuple = (today.month, today.day)
 
-data = pandas.read_csv("birthdays.csv")
-birthdays_dict = {(data_row["month"], data_row["day"])                  : data_row for (index, data_row) in data.iterrows()}
-if today_tuple in birthdays_dict:
-    birthday_person = birthdays_dict[today_tuple]
-    file_path = f"letter_templates/letter_{random.randint(1, 3)}.txt"
-    with open(file_path) as letter_file:
-        contents = letter_file.read()
-        contents = contents.replace("[NAME]", birthday_person["name"])
 
-    with smtplib.SMTP("YOUR EMAIL PROVIDER SMTP SERVER ADDRESS") as connection:
-        connection.starttls()
-        connection.login(MY_EMAIL, MY_PASSWORD)
-        connection.sendmail(
-            from_addr=MY_EMAIL,
-            to_addrs=birthday_person["email"],
-            msg=f"Subject:Happy Birthday!\n\n{contents}"
-        )
+envpath=find_dotenv()
+load_dotenv(envpath)
+
+os.getenv("APIKEY")
+os.getenv("account_sid")
+os.getenv("auth_token")
+os.getenv("MOBNUM")
+os.getenv("VRNUM")
+
+MY_LAT = 18.757420
+MY_LONG = 73.413727
+                                                      
+
+parameters = {
+    "lat":MY_LAT,
+    "lon":MY_LONG,
+    "appid":os.environ["API_KEY"],
+    "cnt":4
+}
+
+
+respond = requests.get("https://api.openweathermap.org/data/2.5/forecast",params=parameters)
+respond.raise_for_status()
+data = respond.json()
+
+
+will_rain = False
+for hour_data in data["list"]:
+    value = hour_data["weather"][0]["id"]
+    if int(value) < 700:
+        will_rain = True
+if will_rain :
+    proxy_client = TwilioHttpClient()
+    proxy_client.session.proxies = {'https': os.environ['https_proxy']}
+    client = Client(os.getenv("account_sid"), os.environ["auth_token"],http_client=proxy_client)
+    message = client.messages.create(
+        body="bring your umbrella  ☂️",
+        from_=os.getenv("VRNUM"),
+        to=os.getenv("MOBNUM"))
+    print(message.status)
+
+else:
+    proxy_client = TwilioHttpClient()
+    proxy_client.session.proxies = {'https': os.environ['https_proxy']}
+    client = Client(os.getenv("account_sid"), os.environ["auth_token"],http_client=proxy_client)
+    message = client.messages.create(
+        body="DONT bring your umbrella  ☂️",
+        from_=os.getenv("VRNUM"),
+        to=os.getenv("MOBNUM"))
+    print(message.status)
+
